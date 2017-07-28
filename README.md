@@ -6,11 +6,11 @@
 Project 6 : Linux server configuration
 
 # Server Details
-* URL: [52.56.113.173](https://52.56.113.173) or [http://ec2-52-56-113-173.compute-1.amazonaws.com](http://ec2-52-56-113-173.compute-1.amazonaws.com)
+* URL: [35.176.143.65](https://35.176.143.65) or [ec2-35-176-143-65.eu-west-2.compute.amazonaws.com](http://ec2-35-176-143-65.eu-west-2.compute.amazonaws.com/)
 
 * SSH port: changed from ~~**22**~~ to **2200**
 
-* IP adress: `52.56.113.173`
+* IP adress: `35.176.143.65`
 
 # Configuration
 ## Instantiate on [AWS LightSail](https://lightsail.aws.amazon.com)
@@ -175,7 +175,7 @@ To                         Action      From
 
 5. Check to make sure the catalog user was created by running `\du`
 
-6. A table will come up showing all the roles added, check on catalog role if its able to createDB
+6. A table will come up showing all the roles added, check on `catalog role` if its able to `create DB`
 
 7. Exit psql by running `\q`
 
@@ -210,10 +210,10 @@ To                         Action      From
 ## Install git and clone the catalog project
 1. Install git by running `sudo apt-get install git`
 
-2. Create a directory called **itemCatalog** and clone the [catalog project](https://github.com/blurdylan/item-catalog.git) by running `sudo git clone https://github.com/blurdylan/item-catalog.git itemCatalog`
+2. Create a directory called **itemCatalog** and clone the [catalog project](https://github.com/blurdylan/item-catalog.git) by running `sudo -u www-data git clone https://github.com/blurdylan/item-catalog.git itemCatalog`
     > Note that the _itemCatalog_ at the end is to stop git from adding the folder item-catalog because Apache doesn't like hyphens very much
 
-3. Change the ownership of the 'itemCatalog' directory to ubuntu by running (while in /var/www): `sudo chown -R ubuntu:ubuntu itemCatalog/`
+3. Change the ownership of the 'itemCatalog' directory to www-data by running (while in /var/www): `sudo chown -R www-data:www-data itemCatalog/`
 
 4. Go to the `cd /var/www/itemCatalog/itemCatalog` directory
 
@@ -224,13 +224,13 @@ To                         Action      From
 ## Adding Google Auth
 1. Create a new project on the Google API Console
 
-1. Go on credential tabs, create an auth and add http://XX.XX.XX.XX and http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com as authorized JavaScript origins
+1. Go on credential tabs, create an auth and add http://XX.XX.XX.XX as authorized JavaScript origins
 
-2. Add http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com/login and http://ec2-XX-XX-XX-XX.compute-1.amazonaws.com/gconnect as authorized redirect URIs
+> Where XX.XX.XX.XX is the public ip address numbers
 
-> Where XX.XX.XX.XX and XX-XX-XX-XX is the public ip address numbers
+5. Edit the login.html and base.html with any text editor of your choice
 
-5. Search for the words change this in login.html and base.html
+5. Search for the words `change this` in `login.html` and `base.html`
 
 5. add your clientID on the `meta tag`
 
@@ -289,14 +289,18 @@ sudo apt-get install libpq-dev
 		CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 ```
+1. Run `sudo a2ensite itemCatalog` to enable the virtual host for apache2
 
-2. Run `sudo service apache2 reload`
+2. Run `sudo service apache2 reload` to restart apache
 
 ### Create a wsgi file for the app
 1. Create itemCatalog.wsgi in the cloned application folder
 
 2. Edit the file with `sudo nano itemCatalog.wsgi` and add the following:
 ```
+activate_this = '/var/www/itemCatalog/itemCatalog/venv/bin/activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
+
 #!/usr/bin/python
 import sys
 import logging
@@ -310,7 +314,65 @@ application.secret_key = 'secret'
 
 3. `sudo service apache2 restart` to restart apache service
 
-### Populating the database (Optional)
-1. To populate the database we have to change the database engine from sqlite to postgre sql in both `db_setup.py` and `db_init.py`
+## Change DB from SQLite to Postgre
+Search for the `create_engine` in __init__.py, db_init.py and db_setup.py
+change these lines to
 
-2. Edit the `itemCatalog.wsgi` file or simply run the files with `python`
+`engine = create_engine('postgresql://catalog:INSERT_PASSWORD_FOR_DATABASE_HERE@localhost/catalog')`
+
+## Disable the apache site
+1. Run `sudo a2dissite 000-default.conf`
+2. Restart the server with sudo `service apache2 reload`
+
+## Setup the schema and populate the DB
+1. Go to itemCatalog directory (`cd /var/www/itemCatalog/itemCatalog`)
+2. Activate the virtual enviroment `. <ve name>/bin/activate` in this case it will be `. venv/bin/activate`
+3. Run `python db_init.py` to populate the database, you'll get a response
+4. Restart `sudo service apache2 restart`
+5. Open the browser through the public ip adress
+
+## Additional configurations (Optional)
+
+### System Monitoring
+glances can help monitor the processes install with `sudo apt-get install glances`
+
+to set it up for apache and postgres add these lines to the glances config file : `/etc/glances/glances.conf`
+
+```
+list_1_description=Apache Server
+list_1_regex=.*apache.*
+list_2_description=Postgres
+list_2_regex=.*postgres.*
+```
+This will show the running processes of postgres and apache and those not running
+
+## Some errors encountered and fixes
+### Server name error
+This is actually a warning obtained:
+
+`AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 127.0.0.1. Set the 'ServerName' directive globally to suppress this message`
+
+and could be solved by the following:
+ 
+1. open up the `/etc/apache2/apache2.conf` file
+
+1. Add in the following line at the end of the file:
+
+2. ServerName localhost
+
+3. Restart Apache by running `sudo service apache2 restart`
+
+
+## Sources
+[Configuring linux servers](https://www.udacity.com/course/configuring-linux-web-servers--ud299) - Udacity course
+
+[Command line basics](https://www.udacity.com/course/linux-command-line-basics--ud595) - Udacity course
+
+[Deploying a flask application](https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps) - Digital Ocean Tutorials
+
+[Ubuntu forum](askubuntu.com) - Ask ubuntu for questions on commands
+
+[WSGI setup](https://code.google.com/archive/p/modwsgi/wikis/ConfigurationDirectives.wiki) - Parameters for setting up the WSGI configuration files
+
+[Stack Overflow](stackoverflow.com) and [Udacity Forum](https://discussions.udacity.com) Posts: system restart required [issue](http://askubuntu.com/questions/258297/should-i-always-restart-the-system-when-i-see-system-restart-required);[Postgresql](https://discussions.udacity.com/t/psycopg2-operationalerror-postgresql-error/202640/3) error; 
+[hyphens and apache](http://stackoverflow.com/questions/18427766/apache2-and-mod-wsgi-target-wsgi-script-cannot-be-loaded-as-python-module)
