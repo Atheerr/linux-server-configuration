@@ -6,7 +6,7 @@
 Project 6 : Linux server configuration
 
 # Server Details
-* URL: [35.176.143.65](35.176.143.65) or [ec2-35-176-143-65.eu-west-2.compute.amazonaws.com](http://ec2-35-176-143-65.eu-west-2.compute.amazonaws.com/)
+* URL: [35.176.143.65](http://35.176.143.65) or [ec2-35-176-143-65.eu-west-2.compute.amazonaws.com](http://ec2-35-176-143-65.eu-west-2.compute.amazonaws.com/)
 
 * SSH port: changed from ~~**22**~~ to **2200**
 
