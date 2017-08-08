@@ -6,11 +6,13 @@
 Project 6 : Linux server configuration
 
 # Server Details
-* URL: [35.176.143.65](http://35.176.143.65) or [ec2-35-176-143-65.eu-west-2.compute.amazonaws.com](http://ec2-35-176-143-65.eu-west-2.compute.amazonaws.com/)
+> This was a project realized for my course at udacity, So these servers has been shut down
+
+* URL: ~~[35.176.143.65](http://35.176.143.65) or [ec2-35-176-143-65.eu-west-2.compute.amazonaws.com](http://ec2-35-176-143-65.eu-west-2.compute.amazonaws.com/)~~
 
 * SSH port: changed from ~~**22**~~ to **2200**
 
-* IP adress: `35.176.143.65`
+* IP adress: ~~`35.176.143.65`~~
 
 # Configuration
 ## Instantiate on [AWS LightSail](https://lightsail.aws.amazon.com)
